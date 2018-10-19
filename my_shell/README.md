@@ -1,4 +1,4 @@
-	1) Run a while loop and get input using getline() from either the stdin or batch.txt
+	1)  Run a while loop and get input using getline() from either the stdin or batch.txt; if input from stdin, display "wish>" and then start accepting input. If input from batch; process all lines and then display "wish>"
 	2)  If EOF is hit at any point, exit the program gracefully (exit(0))
 	3)  To parse the input, use strtok/strtok_r and break input into constituent pieces
 	4)  To execute commands, look into fork(), exec() and wait()/waitpid()
