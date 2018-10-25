@@ -6,6 +6,26 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+void append_int(int num, char ***arg_array, int* arg_size)
+{
+	*arg_size += 1;
+	int i = *arg_size;
+	
+	*arg_array = (char**)realloc(*arg_array, sizeof(char*) * i);
+
+	if (*arg_array == 0){
+		printf("Out of memory..exiting\n");
+		exit(1);
+	}
+	*(*arg_array+i-1) = (char*)malloc(sizeof(char));
+	if(*(*arg_array+i-1) == 0){
+		printf("Out of memory..exiting\n");
+		exit(1);
+	}
+	
+	*(*(*arg_array+i-1)) = num;
+
+}
 void append_to_args(char* tok, char ***arg_array, int* arg_size)
 {
 	*arg_size += 1;
@@ -79,7 +99,12 @@ int main(int argc, char** argv){
 				append_to_args(tok, &arg_array, &arg_array_size);	
 			}
 		}	
+		append_int(0, &arg_array, &arg_array_size);
+
 		print_arg_array(arg_array, &arg_array_size);
+		
+		//check if the binary is present in either /bin or /usr/bin
+		
 		free_arg_array(&arg_array, &arg_array_size);
 		
 		free(lineptr);
