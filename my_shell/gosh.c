@@ -43,7 +43,7 @@ void append_to_args(char* tok, char ***arg_array, int* arg_size)
 
 void print_arg_array(char **arr, int* size){
 	for(int i = 0; i < *size; ++i)
-		printf("%s\n", arr[i]);
+		if(arr[i] != NULL)		printf("%s\n", arr[i]);
 }
 
 void free_arg_array(char ***arr, int* size){
@@ -71,7 +71,7 @@ int main(int argc, char** argv){
 	int arg_array_size = 0;
 
 	while(1){
-		printf("wish> ");
+		printf("gosh> ");
 		r_size = getline(&lineptr, &line_size, stdin);
 		
 		//parse and get stuff 
@@ -83,37 +83,34 @@ int main(int argc, char** argv){
 			
 		//parse the string and get the tokens
 		
-		tok = strtok_r(lineptr, " ", &saveptr);	
+		tok = strtok_r(lineptr, " \t\r\n\v\f", &saveptr);	
 		if(tok != NULL){
 			append_to_args(tok, &arg_array, &arg_array_size);
 		}
 		while(tok != NULL){
-			tok = strtok_r(NULL, " ", &saveptr);
+			tok = strtok_r(NULL, " \t\r\n\v\f", &saveptr);
 			if(tok != NULL){
 				append_to_args(tok, &arg_array, &arg_array_size);	
 			}
 		}	
 		append_int(0, &arg_array, &arg_array_size);
 
-		print_arg_array(arg_array, &arg_array_size);
+//		print_arg_array(arg_array, &arg_array_size);
 		
 		//check if the binary is present in either /bin or /usr/bin
 		char filepath[50] = "/bin/";
 		strcat(filepath, arg_array[0]);
 		if(access(filepath, X_OK) == 0){
-			printf("file found\n");
 			int rc = fork();
 			if(rc < 0){
 				fprintf(stderr, "fork failed\n");
 				exit(1);
 			}
 			else if(rc == 0){
-				printf("child process\n");
 				execv(filepath, arg_array);
 			}
 			else{
 				wait(NULL);
-				printf("Parent process\n");
 			}
 		}
 		else{

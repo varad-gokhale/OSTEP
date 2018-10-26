@@ -4,9 +4,9 @@ FLAGS = -Werror \
 		-Wall \
 		-std=c99
 
-wish:   *.c
-		$(CC) $(FLAGS) -o wish *.c
+gosh:   *.c
+		$(CC) $(FLAGS) -o gosh *.c
 
 clean:
-		rm -f wish *.o
+		rm -f gosh *.o
 		
