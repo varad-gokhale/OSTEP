@@ -17,7 +17,7 @@ void append_int(int num, char ***arg_array, int* arg_size)
 		printf("Out of memory..exiting\n");
 		exit(1);
 	}
-	*(*arg_array+i-1) = NULL; 
+	(*arg_array)[i-1] = NULL; 
 	
 }
 void append_to_args(char* tok, char ***arg_array, int* arg_size)
@@ -83,12 +83,12 @@ int main(int argc, char** argv){
 			
 		//parse the string and get the tokens
 		
-		tok = strtok_r(lineptr, " \t\r\n\v\f", &saveptr);
+		tok = strtok_r(lineptr, " ", &saveptr);	
 		if(tok != NULL){
-		tok = strtok_r(lineptr, " \t\r\n\v\f", &saveptr);
+			append_to_args(tok, &arg_array, &arg_array_size);
 		}
 		while(tok != NULL){
-			tok = strtok_r(NULL, " \t\r\n\v\f", &saveptr);
+			tok = strtok_r(NULL, " ", &saveptr);
 			if(tok != NULL){
 				append_to_args(tok, &arg_array, &arg_array_size);	
 			}
@@ -117,7 +117,7 @@ int main(int argc, char** argv){
 			}
 		}
 		else{
-			printf("file not found");
+			printf("file not found\n");
 		}
 			
 		free_arg_array(&arg_array, &arg_array_size);
