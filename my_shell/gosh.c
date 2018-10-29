@@ -6,37 +6,66 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <dirent.h>
+#include <errno.h>
+
 void append_to_args(char*, char***, int*);
+void free_arg_array(char***, int*);
 
 void process_builtin(int argc, char** argv, char*** path_array, int* path_array_size)
 {
-	if(argc == 2 && strcmp(argv[1], "exit") == 0)	exit(0);
-	
-	if(strcmp(argv[1], "cd") == 0)
+	if(strcmp(argv[0], "exit") == 0)
 	{
-		if(argc < 3 || argc > 3){
-			fprintf(stderr, "illegal use of cd: takes only one directory path\n");
-			exit(1);
+		if(argc >= 2){
+			printf("usage: exit takes no argument\n");
+			return;
+		}
+		exit(0);
+	}
+	
+	if(strcmp(argv[0], "cd") == 0)
+	{
+		if(argc < 2 || argc > 2){
+			printf("usage: cd takes only one argument\n");
+			return;
 		}
 		
-		if(chdir(argv[2]) != 0)
+		if(chdir(argv[1]) != 0)
 		{
-			fprintf(stderr, "no such directory\n");
-			exit(1);
+			printf("%s : no such directory\n", argv[1]);
+			return;
 		}	
 	}
 	
-	if(strcmp(argv[1], "path") == 0)
+	if(strcmp(argv[0], "path") == 0)
 	{
-		for(int i = 2; i < argc; ++i){
+		free_arg_array(path_array, path_array_size);	
+		for(int i = 1; i < argc; ++i){
 			char temp[strlen(argv[i]) + 2];
-			strcat(temp, argv[i]);
-			strcat(temp, "/");	
-			append_to_args(argv[i], path_array, path_array_size);
+			strcpy(temp, argv[i]);
+			strcat(temp, "/");
+			DIR* dir = opendir(temp);	
+			if(dir)
+				append_to_args(temp, path_array, path_array_size);
+			else if(errno == ENOENT)
+				printf("%s does not exist\n", temp);	
+			else if(errno == EACCES)
+				printf("Permission denied\n");
+			else if(errno == ENFILE)
+				printf("Too many files are currently open in the system\n");
+			else if(ENOMEM == errno)
+				printf("Insufficient memory to complete the operation\n");
+			else if(errno == ENOTDIR)
+				printf("%s is not a directory", temp);
+			closedir(dir);
+		}
+		if(*path_array_size == 0){
+			append_to_args("", path_array, path_array_size);
 		}
 	}
 		
 }
+
 void append_int(int num, char ***arg_array, int* arg_size)
 {
 	*arg_size += 1;
@@ -104,9 +133,6 @@ int main(int argc, char** argv){
 	char **path_arr = NULL;
 	int path_arr_size = 0;
 	
-	if(argc > 1)
-		process_builtin(argc, argv, &path_arr, &path_arr_size);
-
 	while(1){
 		printf("gosh> ");
 		r_size = getline(&lineptr, &line_size, stdin);
@@ -130,12 +156,26 @@ int main(int argc, char** argv){
 				append_to_args(tok, &arg_array, &arg_array_size);	
 			}
 		}	
+		
+		if(strcmp(arg_array[0], "exit") == 0 || strcmp(arg_array[0], "cd") == 0 || strcmp(arg_array[0], "path") == 0)
+		{
+			process_builtin(arg_array_size, arg_array, &path_arr, &path_arr_size);	
+
+			if(strcmp(arg_array[0], "path") == 0)
+				print_arg_array(path_arr, &path_arr_size);
+
+			free_arg_array(&arg_array, &arg_array_size);
+			free(lineptr);
+			lineptr = NULL;
+			continue;
+		}
+
 		append_int(0, &arg_array, &arg_array_size);
 
 //		print_arg_array(arg_array, &arg_array_size);
 		
 		//check if the binary is present in either /bin or /usr/bin
-		char filepath[50] = "/bin/";
+		char filepath[50] = "/bin//";
 		strcat(filepath, arg_array[0]);
 		if(access(filepath, X_OK) == 0){
 			int rc = fork();
@@ -151,7 +191,7 @@ int main(int argc, char** argv){
 			}
 		}
 		else{
-			printf("file not found\n");
+			printf("%s: command not found\n", arg_array[0]);
 		}
 			
 		free_arg_array(&arg_array, &arg_array_size);
