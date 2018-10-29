@@ -129,9 +129,12 @@ int main(int argc, char** argv){
 	char *tok, *saveptr;
 	char** arg_array = NULL;
 	int arg_array_size = 0;
+	int is_command_exec = 0;
 
 	char **path_arr = NULL;
 	int path_arr_size = 0;
+	append_to_args("/bin/", &path_arr, &path_arr_size);
+	append_to_args("/usr/bin/", &path_arr, &path_arr_size);
 	
 	while(1){
 		printf("gosh> ");
@@ -161,9 +164,6 @@ int main(int argc, char** argv){
 		{
 			process_builtin(arg_array_size, arg_array, &path_arr, &path_arr_size);	
 
-			if(strcmp(arg_array[0], "path") == 0)
-				print_arg_array(path_arr, &path_arr_size);
-
 			free_arg_array(&arg_array, &arg_array_size);
 			free(lineptr);
 			lineptr = NULL;
@@ -175,27 +175,31 @@ int main(int argc, char** argv){
 //		print_arg_array(arg_array, &arg_array_size);
 		
 		//check if the binary is present in either /bin or /usr/bin
-		char filepath[50] = "/bin//";
-		strcat(filepath, arg_array[0]);
-		if(access(filepath, X_OK) == 0){
-			int rc = fork();
-			if(rc < 0){
-				fprintf(stderr, "fork failed\n");
-				exit(1);
+		for(int i = 0; i < path_arr_size; ++i)
+		{
+			char filepath[50];
+			strcpy(filepath, path_arr[i]);
+			strcat(filepath, arg_array[0]);
+			if(access(filepath, X_OK) == 0){
+				int rc = fork();
+				if(rc < 0){
+					fprintf(stderr, "fork failed\n");
+					exit(1);
+				}
+				else if(rc == 0){
+					execv(filepath, arg_array);
+				}
+				else{
+					wait(NULL);
+					is_command_exec = 1;
+					break;
+				}
 			}
-			else if(rc == 0){
-				execv(filepath, arg_array);
-			}
-			else{
-				wait(NULL);
-			}
-		}
-		else{
-			printf("%s: command not found\n", arg_array[0]);
-		}
-			
-		free_arg_array(&arg_array, &arg_array_size);
-		
+		}			
+		if(!is_command_exec)	printf("%s: command not found\n", arg_array[0]);
+		is_command_exec = 0;
+
+		free_arg_array(&arg_array, &arg_array_size);		
 		free(lineptr);
 		lineptr = NULL;
 		
