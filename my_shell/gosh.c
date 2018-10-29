@@ -6,6 +6,22 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+
+void process_builtin(int argc, char** argv)
+{
+	if((strcmp(argv[1], "exit") == 0))	exit(0);
+	
+	if(strcmp(argv[1], "cd") == 0){
+		if(argc == 2 || argc >= 4){
+			fprintf(stderr, "Usage error: cd takes 1 path as argument\n");
+			exit(1);
+		}
+		int ret = chdir(argv[2]);
+		if(ret == -1){
+			fprintf(stderr, "invalid path\n");
+		}
+	}	
+}
 void append_int(int num, char ***arg_array, int* arg_size)
 {
 	*arg_size += 1;
