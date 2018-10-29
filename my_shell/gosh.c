@@ -6,21 +6,36 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+void append_to_args(char*, char***, int*);
 
-void process_builtin(int argc, char** argv)
+void process_builtin(int argc, char** argv, char*** path_array, int* path_array_size)
 {
-	if((strcmp(argv[1], "exit") == 0))	exit(0);
+	if(argc == 2 && strcmp(argv[1], "exit") == 0)	exit(0);
 	
-	if(strcmp(argv[1], "cd") == 0){
-		if(argc == 2 || argc >= 4){
-			fprintf(stderr, "Usage error: cd takes 1 path as argument\n");
+	if(strcmp(argv[1], "cd") == 0)
+	{
+		if(argc < 3 || argc > 3){
+			fprintf(stderr, "illegal use of cd: takes only one directory path\n");
 			exit(1);
 		}
-		int ret = chdir(argv[2]);
-		if(ret == -1){
-			fprintf(stderr, "invalid path\n");
+		
+		if(chdir(argv[2]) != 0)
+		{
+			fprintf(stderr, "no such directory\n");
+			exit(1);
+		}	
+	}
+	
+	if(strcmp(argv[1], "path") == 0)
+	{
+		for(int i = 2; i < argc; ++i){
+			char temp[strlen(argv[i]) + 2];
+			strcat(temp, argv[i]);
+			strcat(temp, "/");	
+			append_to_args(argv[i], path_array, path_array_size);
 		}
-	}	
+	}
+		
 }
 void append_int(int num, char ***arg_array, int* arg_size)
 {
@@ -85,6 +100,12 @@ int main(int argc, char** argv){
 	char *tok, *saveptr;
 	char** arg_array = NULL;
 	int arg_array_size = 0;
+
+	char **path_arr = NULL;
+	int path_arr_size = 0;
+	
+	if(argc > 1)
+		process_builtin(argc, argv, &path_arr, &path_arr_size);
 
 	while(1){
 		printf("gosh> ");
