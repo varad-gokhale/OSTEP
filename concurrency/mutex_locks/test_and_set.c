@@ -1,6 +1,7 @@
 //This lock guarantees atomicity but there are two problems:
 // 1. a thread can acquire and reacquire the lock indefinitely thus starving other threads(no guarantee of all threads being serviced)
 // 2. Performance issue: when the lock is spinning, the whole time slice is spend doing no work(and just spinning)
+// Problem 2 can be solved by using yield() system call in case lock is unavailable, but still doesn't solve problem 1
 
 typedef struct{
   int lock;
