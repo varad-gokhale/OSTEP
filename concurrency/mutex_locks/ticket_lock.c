@@ -1,5 +1,6 @@
 // advantage of this lock over other locks is that it guarantees that threads will be serviced on a first come first basis
 // no thread is starved
+// thus, problem one in test_and_set.c is solved, but problem two still remains
 
 typedef struct{
   int ticket;
