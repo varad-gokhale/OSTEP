@@ -1,3 +1,7 @@
+//This lock guarantees atomicity but there are two problems:
+// 1. a thread can acquire and reacquire the lock indefinitely thus starving other threads(no guarantee of all threads being serviced)
+// 2. Performance issue: when the lock is spinning, the whole time slice is spend doing no work(and just spinning)
+
 typedef struct{
   int lock;
 }mutex_t;
