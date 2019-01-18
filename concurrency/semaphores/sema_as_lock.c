@@ -1,5 +1,7 @@
 //binary semaphore for critical section
 
+
+//consider the below three methods as atmoic operations
 void init_sema(semaphore_t* s, int val){
   s->val = val;
 }
@@ -14,6 +16,7 @@ void signal_sema(semaphore_t* s){
   s->val += 1;
   wake_one_thread();
 }
+//--------------------------------------------//
 
 volatile int counter = 0;
 
@@ -29,7 +32,7 @@ void* child(void* arg){
 
 void main(int argc, char** argv)
 {
-	pthread_t t1, t2;
+	thread_t t1, t2;
 	semaphore_t s;
 	
 	init_sema(&s, 1);
